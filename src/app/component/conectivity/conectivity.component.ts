@@ -38,19 +38,32 @@ export class ConectivityComponent implements OnInit {
     });
   }
 
+  /**
+   * Formats the given date string into a user-friendly format.
+   * @param createAt The date string to format.
+   * @returns A formatted date string in the format 'yyyy-MM-dd hh:mm a'.
+   */
   getDate(createAt: string): string {
-    return this.datePipe.transform(new Date(createAt), 'yyyy-MM-dd hh:mm a') || '';
+    return this.datePipe.transform(createAt, 'yyyy-MM-dd hh:mm a') || '';
   }
 
+  /**
+   * Initiates the GitHub login process.
+   */
   connect(): void {
     this.conectivityService.loginWithGitHub();
   }
 
+  /**
+   * Handles the callback from GitHub OAuth process.
+   * @param code The authorization code received from GitHub.
+   * @param state The state parameter for CSRF protection.
+   */
   private getCallback(code: string, state: string): void {
     this.spinner.show();
     this.conectivityService.getCallBack({ code, state }).subscribe({
-      next: (x) => {
-        localStorage.setItem('user', JSON.stringify(x));
+      next: (user) => {
+        localStorage.setItem('user', JSON.stringify(user));
         this.router.navigate(['/']);
         this.spinner.hide();
       },
@@ -58,9 +71,13 @@ export class ConectivityComponent implements OnInit {
     });
   }
 
+  /**
+   * Disconnects the current user from the application.
+   * @param userToken The access token of the user to be disconnected.
+   */
   disconectUser(userToken: string): void {
     this.spinner.show();
-    this.conectivityService.disconectUser(userToken).subscribe({
+    this.conectivityService.disconnectUser(userToken).subscribe({
       next: () => {
         localStorage.removeItem('user');
         this.connectedUser = null;
