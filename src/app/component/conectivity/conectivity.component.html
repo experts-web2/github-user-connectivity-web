@@ -24,7 +24,16 @@
             <img [src]="'assets/icons/incognito.png'" width="15" height="15" alt="Edit" />
           </button>
         </div>
+        <div style="margin-top: 10px;">
+          <app-ag-grid [data]="organizationRepos" [colDefs]="colDefs" (onRowSelection)="onActionClick($event)">
+          </app-ag-grid>
+        </div>
+
+        <app-repo-details></app-repo-details>
+
+        
       </mat-expansion-panel>
+
     </mat-accordion>
   </mat-card-content>
 </mat-card>
@@ -32,3 +41,4 @@
 <ngx-spinner bdColor="rgba(51,51,51,0.8)" size="medium" color="#fff" type="square-jelly-box" [fullScreen]="true">
   <img style="margin-left: 10px;" [src]="'assets/icons/loading.gif'" width="30" height="30" alt="Edit" />
 </ngx-spinner>
+

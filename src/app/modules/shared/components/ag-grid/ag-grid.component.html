@@ -1,0 +1,13 @@
+<ag-grid-angular
+  [pagination]="true"
+  [paginationPageSize]="paginationPageSize"
+  style="width: 100%; height: 500px;"
+  class="ag-theme-alpine"
+  [rowData]="rowData"
+  [rowSelection]="'single'"
+  [columnDefs]="colDefs"
+  (rowClicked)="onRowSelected($event)"
+  >
+</ag-grid-angular>
+
+

@@ -1,18 +1,20 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from './http.service';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import * as crypto from 'crypto-js';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ConectivityService extends HttpService {
+  organizationRepos$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
+
   // GitHub OAuth client ID
   private readonly CLIENT_ID = 'Ov23liEfxzi01DRu0sXZ';
-  // GitHub OAuth authorization URL
+  // GitHub OAuth authorization 
+  
   private readonly GITHUB_AUTH_URL = 'https://github.com/login/oauth/authorize';
-
   constructor(http: HttpClient) {
     super(http);
   }
@@ -36,6 +38,50 @@ export class ConectivityService extends HttpService {
   }
 
   /**
+   * Sends a POST request to the OAuth callback endpoint
+   * @param data The data to be sent in the request body
+   * @returns An Observable of the server response
+   */
+  getOrganizations(data: any): Observable<any> {
+    return this.post('oauth/organizations', data);
+  }
+
+  /**
+   * Sends a POST request to the OAuth callback endpoint
+   * @param data The data to be sent in the request body
+   * @returns An Observable of the server response
+   */
+  getOrganizationRepos(data: any): Observable<any> {
+    return this.post('oauth/organizations/repos', data);
+  }
+////
+  /**
+   * Sends a POST request to the OAuth callback endpoint
+   * @param data The data to be sent in the request body
+   * @returns An Observable of the server response
+   */
+  getOrganizationReposPullRequests(data: any): Observable<any> {
+    return this.post('oauth/organizations/repos-pull-requests', data);
+  }
+  /**
+   * Sends a POST request to the OAuth callback endpoint
+   * @param data The data to be sent in the request body
+   * @returns An Observable of the server response
+   */
+  getOrganizationReposIssues(data: any): Observable<any> {
+    return this.post('oauth/organizations/repos-issues', data);
+  }
+  /**
+   * Sends a POST request to the OAuth callback endpoint
+   * @param data The data to be sent in the request body
+   * @returns An Observable of the server response
+   */
+  getOrganizationReposCommits(data: any): Observable<any> {
+    return this.post('oauth/organizations/repos-commits', data);
+  }
+
+
+  /**
    * Initiates the GitHub OAuth login process
    * Generates a random state for CSRF protection and redirects to GitHub's authorization page
    */
@@ -57,3 +103,5 @@ export class ConectivityService extends HttpService {
     window.location.href = `${this.GITHUB_AUTH_URL}?${params.toString()}`;
   }
 }
+
+

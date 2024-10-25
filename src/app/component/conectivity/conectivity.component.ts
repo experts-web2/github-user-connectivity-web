@@ -1,30 +1,49 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgxSpinnerService } from 'ngx-spinner';
+import { BehaviorSubject, combineLatest } from 'rxjs';
 import { IConnectedUser } from 'src/app/model/user';
 import { ConectivityService } from 'src/app/services/conectivity.service';
+import { ColDef } from 'ag-grid-community';
 
 @Component({
   selector: 'app-conectivity',
   templateUrl: './conectivity.component.html',
   styleUrls: ['./conectivity.component.scss'],
-  providers: [DatePipe],
 })
 export class ConectivityComponent implements OnInit {
   panelOpenState = false;
   connectedUser: IConnectedUser | null = null;
+  organizationRepos: Array<any> = []
+  display: boolean = false;
+  colDefs: ColDef<any>[] = [
+    { headerName: "Id", field: 'id', filter: true, sortable: true },
+    { headerName: "Name",field: 'name', filter: true },
+    { headerName: "Link",field: 'git_url', filter: true },
+    { headerName: "Slug", field: 'disabled', filter: true },
+    { headerName: "Included", field: '' ,checkboxSelection:true }
+  ];
 
+  repoComments: any;
+  repoPullRequest: any[]=[];
+  repoIssues: any[]=[];
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private datePipe: DatePipe,
     private conectivityService: ConectivityService,
-    private spinner: NgxSpinnerService
+    private spinner: NgxSpinnerService,
+    private cdr: ChangeDetectorRef
   ) {
     const user = localStorage.getItem('user');
+    const repos = localStorage.getItem('repos');
     if (user) {
       this.connectedUser = JSON.parse(user);
+    }
+    if (repos) {
+      this.organizationRepos = JSON.parse(repos);
+      this.conectivityService.organizationRepos$.next(this.organizationRepos)
     }
   }
 
@@ -32,10 +51,14 @@ export class ConectivityComponent implements OnInit {
     this.route.queryParams.subscribe(({ code, state }) => {
       const storedState = localStorage.getItem('latestCSRFToken');
       if (state !== storedState) return;
-
       localStorage.removeItem('latestCSRFToken');
       this.getCallback(code, state);
+
     });
+
+    this.conectivityService.organizationRepos$.subscribe(data => {
+      this.organizationRepos = data
+    })
   }
 
   /**
@@ -63,11 +86,71 @@ export class ConectivityComponent implements OnInit {
     this.spinner.show();
     this.conectivityService.getCallBack({ code, state }).subscribe({
       next: (user) => {
+        localStorage.setItem('token',JSON.stringify(user.accessToken))
+        this.getOrganizations(user.accessToken);
         localStorage.setItem('user', JSON.stringify(user));
         this.router.navigate(['/']);
         this.spinner.hide();
       },
       error: () => this.spinner.hide(),
+    });
+  }
+
+  /**
+   * Handles the callback from GitHub OAuth process.
+   * @param code The authorization code received from GitHub.
+   * @param state The state parameter for CSRF protection.
+   */
+  private getOrganizations(token: string): void {
+    let payload = {
+      accessToken: token
+    }
+    this.spinner.show();
+    this.conectivityService.getOrganizations(payload).subscribe({
+      next: (user) => {
+        this.getOrganizationsRepo(token)
+        this.spinner.hide();
+      },
+      error: () => this.spinner.hide(),
+    });
+  }
+
+  /**
+   * Handles the callback from GitHub OAuth process.
+   * @param code The authorization code received from GitHub.
+   * @param state The state parameter for CSRF protection.
+   */
+  getOrganizationsRepo(token: string): void {
+    let payload = {
+      accessToken: token,
+    }
+    this.spinner.show();
+    this.conectivityService.getOrganizationRepos(payload).subscribe({
+      next: (user) => {
+        this.conectivityService.organizationRepos$.next(user.data)
+        localStorage.setItem('repos', JSON.stringify(user.data))
+        this.spinner.hide();
+      },
+      error: () => this.spinner.hide(),
+    });
+  }
+
+
+  onActionClick(event:any){
+    let token
+    let tok = localStorage.getItem('token');
+    if(tok){
+      token = JSON.parse(tok)
+    }
+    combineLatest([this.conectivityService.getOrganizationReposCommits({ accessToken:token ,orgName:event.owner.login , repoName:event.name }), this.conectivityService.getOrganizationReposPullRequests({ accessToken:token ,orgName:event.owner.login , repoName:event.name }), this.conectivityService.getOrganizationReposIssues({ accessToken:token ,orgName:event.owner.login , repoName:event.name })]).subscribe({
+      next: ([commits, pullRequests, issues]: [Array<any>, Array<any>, Array<any>]) => {
+        this.repoComments = commits;
+        this.repoPullRequest = pullRequests;
+        this.repoIssues = issues;
+      },
+      error(err) {
+        console.log(err)
+      },
     });
   }
 
@@ -80,6 +163,8 @@ export class ConectivityComponent implements OnInit {
     this.conectivityService.disconnectUser(userToken).subscribe({
       next: () => {
         localStorage.removeItem('user');
+        localStorage.removeItem('repos');
+        this.conectivityService.organizationRepos$.next([])
         this.connectedUser = null;
         this.spinner.hide();
       },

@@ -12,16 +12,25 @@ import { ConectivityComponent } from './component/conectivity/conectivity.compon
 import { AuthModule } from '@auth0/auth0-angular';
 import { HttpClientModule } from '@angular/common/http';
 import { NgxSpinnerModule } from 'ngx-spinner';
+import { DatePipe } from '@angular/common';
+import { AgGridComponent } from './modules/shared/components/ag-grid/ag-grid.component';
+import { AgGridModule } from 'ag-grid-angular';
+import { FormsModule } from '@angular/forms';
+import { SharedModule } from './modules/shared/shared/shared.module';
+import { RepoDetailsComponent } from './component/repo-details/repo-details.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ConectivityComponent,
+    RepoDetailsComponent,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
+    FormsModule,
+    SharedModule,
     MatExpansionModule,
     MatIconModule,
     MatCardModule,
@@ -37,7 +46,7 @@ import { NgxSpinnerModule } from 'ngx-spinner';
     }),
   ],
   exports:[NgxSpinnerModule],
-  providers: [],
+  providers: [DatePipe],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
