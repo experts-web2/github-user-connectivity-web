@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ColDef } from 'ag-grid-community';
+import { RepoRetail } from 'src/app/model/user';
 
 
 @Component({
@@ -8,11 +9,12 @@ import { ColDef } from 'ag-grid-community';
   styleUrls: ['./repo-details.component.scss']
 })
 export class RepoDetailsComponent {
+  @Input() data :RepoRetail[]=[];
   colDetailsDefs: ColDef<any>[] = [
-    { headerName: "UserId", field: 'id', filter: true, sortable: true },
-    { headerName: "User", field: 'name', filter: true },
-    { headerName: "Total Commits", field: 'git_url', filter: true },
-    { headerName: "Total Pull Requests", field: 'disabled', filter: true },
-    { headerName: "Total Issues", field: 'disabled', filter: true },
+    { headerName: "UserId", field: 'userId', filter: true, sortable: true },
+    { headerName: "User", field: 'userName', filter: true },
+    { headerName: "Total Commits", field: 'totalCommits', filter: true },
+    { headerName: "Total Pull Requests", field: 'totalPullRequest', filter: true },
+    { headerName: "Total Issues", field: 'totalIssues', filter: true },
   ];
 }

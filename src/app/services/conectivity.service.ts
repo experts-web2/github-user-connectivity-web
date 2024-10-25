@@ -11,9 +11,7 @@ export class ConectivityService extends HttpService {
   organizationRepos$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
 
   // GitHub OAuth client ID
-  private readonly CLIENT_ID = 'Ov23liEfxzi01DRu0sXZ';
-  // GitHub OAuth authorization 
-  
+  private readonly CLIENT_ID = 'Ov23liEfxzi01DRu0sXZ';  
   private readonly GITHUB_AUTH_URL = 'https://github.com/login/oauth/authorize';
   constructor(http: HttpClient) {
     super(http);
@@ -103,5 +101,3 @@ export class ConectivityService extends HttpService {
     window.location.href = `${this.GITHUB_AUTH_URL}?${params.toString()}`;
   }
 }
-
-

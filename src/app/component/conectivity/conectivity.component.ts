@@ -3,9 +3,10 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import { IConnectedUser } from 'src/app/model/user';
+import { IConnectedUser, IOrganization, RepoRetail } from 'src/app/model/user';
 import { ConectivityService } from 'src/app/services/conectivity.service';
 import { ColDef } from 'ag-grid-community';
+import { IOrganizationRepo, IOrganizationRoot } from 'src/app/model/organization';
 
 @Component({
   selector: 'app-conectivity',
@@ -15,7 +16,7 @@ import { ColDef } from 'ag-grid-community';
 export class ConectivityComponent implements OnInit {
   panelOpenState = false;
   connectedUser: IConnectedUser | null = null;
-  organizationRepos: Array<any> = []
+  organizationRepos: Array<IOrganizationRepo> = []
   display: boolean = false;
   colDefs: ColDef<any>[] = [
     { headerName: "Id", field: 'id', filter: true, sortable: true },
@@ -25,9 +26,10 @@ export class ConectivityComponent implements OnInit {
     { headerName: "Included", field: '' ,checkboxSelection:true }
   ];
 
-  repoComments: any;
-  repoPullRequest: any[]=[];
-  repoIssues: any[]=[];
+  repoComments!: number;
+  repoPullRequest!: number;
+  repoIssues!: number;
+  repoRetails: RepoRetail[]=[];
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -107,7 +109,7 @@ export class ConectivityComponent implements OnInit {
     }
     this.spinner.show();
     this.conectivityService.getOrganizations(payload).subscribe({
-      next: (user) => {
+      next: (organizations : IOrganization[]) => {
         this.getOrganizationsRepo(token)
         this.spinner.hide();
       },
@@ -126,7 +128,7 @@ export class ConectivityComponent implements OnInit {
     }
     this.spinner.show();
     this.conectivityService.getOrganizationRepos(payload).subscribe({
-      next: (user) => {
+      next: (user : IOrganizationRoot) => {
         this.conectivityService.organizationRepos$.next(user.data)
         localStorage.setItem('repos', JSON.stringify(user.data))
         this.spinner.hide();
@@ -143,10 +145,21 @@ export class ConectivityComponent implements OnInit {
       token = JSON.parse(tok)
     }
     combineLatest([this.conectivityService.getOrganizationReposCommits({ accessToken:token ,orgName:event.owner.login , repoName:event.name }), this.conectivityService.getOrganizationReposPullRequests({ accessToken:token ,orgName:event.owner.login , repoName:event.name }), this.conectivityService.getOrganizationReposIssues({ accessToken:token ,orgName:event.owner.login , repoName:event.name })]).subscribe({
-      next: ([commits, pullRequests, issues]: [Array<any>, Array<any>, Array<any>]) => {
-        this.repoComments = commits;
-        this.repoPullRequest = pullRequests;
-        this.repoIssues = issues;
+      next: ([commits, pullRequests, issues]: [any, any, any]) => {
+        this.repoComments = commits.data.length
+        this.repoPullRequest = pullRequests.data.length;
+        this.repoIssues = issues.data.length;
+
+        this.repoRetails = [
+          {
+           userId: this.connectedUser?.data.id,
+           userName: this.connectedUser?.data.name,
+           totalCommits:this.repoComments,
+           totalPullRequest: this.repoPullRequest,
+           totalIssues: this.repoIssues
+           },
+        ];
+
       },
       error(err) {
         console.log(err)
