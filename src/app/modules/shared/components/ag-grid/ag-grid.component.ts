@@ -19,8 +19,6 @@ export class AgGridComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log('colDefs',this.colDefs)
-    console.log('data',this.data)
     if (changes['data'] && this.data) {
       this.rowData = [...this.data];
     }
@@ -29,11 +27,17 @@ export class AgGridComponent implements OnChanges {
   themeClass = "ag-theme-quartz";
 
   onRowSelected(event:any){
-    this.onRowSelection.emit(event.data);
   }
-
-  onSelectionChange(event:any){
-    console.log(event);
+  
+  onSelectionChanged(event:any){
+    
+    const selectedNodes = event.api.getSelectedNodes()[0]?.data; // Gets all selected rows
+    if(selectedNodes){
+      this.onRowSelection.emit(selectedNodes);
+    }
+    else{
+      this.onRowSelection.emit(undefined);
+    }
   }
 
   

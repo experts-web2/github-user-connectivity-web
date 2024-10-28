@@ -6,5 +6,15 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 // @import 'ag-grid-community/styles/ag-grid.css';
 // @import 'ag-grid-community/styles/ag-theme-quartz.css';
 
-@import  "ag-grid-community/styles/ag-grid.css";
-@import  "ag-grid-community/styles/ag-theme-alpine.css";
+// @import  "ag-grid-community/styles/ag-grid.css";
+// @import  "ag-grid-community/styles/ag-theme-alpine.css";
+
+.ag-theme-quartz {
+    --ag-background-color: #f7f7f7;         // Adjust background
+    --ag-header-background-color: #ccccff;  // Adjust header color
+    --ag-odd-row-background-color: #e6e6fa; // Example custom row color
+    --ag-font-family: Arial, sans-serif;
+    --ag-header-foreground-color: #333;
+    --ag-cell-horizontal-border: #ddd;
+    // Add other custom variables as needed
+}

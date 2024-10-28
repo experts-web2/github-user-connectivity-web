@@ -23,9 +23,16 @@ export class ConectivityComponent implements OnInit {
   display: boolean = false;
   colDefs: ColDef<any>[] = [
     { headerName: "Id", field: 'id', filter: true, sortable: true },
-    { headerName: "Name",field: 'name', filter: true },
-    { headerName: "Link",field: 'git_url', filter: true },
-    { headerName: "Slug", field: 'disabled', filter: true },
+    { headerName: "Name",field: 'name', filter: true, sortable: true  },
+    { headerName: "Link",field: 'clone_url', filter: true, sortable: true , cellRenderer: (params:any) => {
+      const link = document.createElement('a');
+      link.href = params.value;
+      link.target = '_blank'; 
+      link.innerText = params.value;
+      link.style.color = 'blue'; 
+      return link;
+  } },
+    { headerName: "Slug", field: 'disabled', filter: true, sortable: true  },
     { headerName: "Included", field: '' ,checkboxSelection:true }
   ];
 
@@ -140,36 +147,44 @@ export class ConectivityComponent implements OnInit {
     });
   }
 
+   /**
+   * Handles the onActionClick from table on click checkbox.
+   * @param event receive from table.
+   */
 
   onActionClick(event:any){
-    let token
-    let tok = localStorage.getItem('token');
-    if(tok){
-      token = JSON.parse(tok)
+    if(event != undefined){
+      let token
+      let accessToken = localStorage.getItem('token');
+      if(accessToken){
+        token = JSON.parse(accessToken)
+      }
+  
+      this.spinner.show();
+      combineLatest([this.conectivityService.getOrganizationReposCommits({ accessToken:token ,orgName:event.owner.login , repoName:event.name }), this.conectivityService.getOrganizationReposPullRequests({ accessToken:token ,orgName:event.owner.login , repoName:event.name }), this.conectivityService.getOrganizationReposIssues({ accessToken:token ,orgName:event.owner.login , repoName:event.name })]).subscribe({
+        next: ([commits, pullRequests, issues]: [ICommitRoot, IPullRequestRoot, IRepoIssueRoot]) => {
+          this.repoComments = commits.data.length
+          this.repoPullRequest = pullRequests.data.length;
+          this.repoIssues = issues.data.length;
+          this.spinner.hide();
+          this.repoRetails = [
+            {
+             userId: this.connectedUser?.data.id,
+             userName: this.connectedUser?.data.name,
+             totalCommits:this.repoComments,
+             totalPullRequest: this.repoPullRequest,
+             totalIssues: this.repoIssues
+             },
+          ];
+  
+        },
+        error(err) {
+          console.log(err)
+        },
+      });
+    }else{
+      this.repoRetails = []
     }
-
-    this.spinner.show();
-    combineLatest([this.conectivityService.getOrganizationReposCommits({ accessToken:token ,orgName:event.owner.login , repoName:event.name }), this.conectivityService.getOrganizationReposPullRequests({ accessToken:token ,orgName:event.owner.login , repoName:event.name }), this.conectivityService.getOrganizationReposIssues({ accessToken:token ,orgName:event.owner.login , repoName:event.name })]).subscribe({
-      next: ([commits, pullRequests, issues]: [ICommitRoot, IPullRequestRoot, IRepoIssueRoot]) => {
-        this.repoComments = commits.data.length
-        this.repoPullRequest = pullRequests.data.length;
-        this.repoIssues = issues.data.length;
-        this.spinner.hide();
-        this.repoRetails = [
-          {
-           userId: this.connectedUser?.data.id,
-           userName: this.connectedUser?.data.name,
-           totalCommits:this.repoComments,
-           totalPullRequest: this.repoPullRequest,
-           totalIssues: this.repoIssues
-           },
-        ];
-
-      },
-      error(err) {
-        console.log(err)
-      },
-    });
   }
 
   /**
@@ -183,6 +198,7 @@ export class ConectivityComponent implements OnInit {
         localStorage.removeItem('user');
         localStorage.removeItem('repos');
         this.conectivityService.organizationRepos$.next([])
+        this.repoRetails = [];
         this.connectedUser = null;
         this.spinner.hide();
       },
