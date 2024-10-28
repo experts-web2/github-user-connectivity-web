@@ -7,6 +7,9 @@ import { IConnectedUser, IOrganization, RepoRetail } from 'src/app/model/user';
 import { ConectivityService } from 'src/app/services/conectivity.service';
 import { ColDef } from 'ag-grid-community';
 import { IOrganizationRepo, IOrganizationRoot } from 'src/app/model/organization';
+import { ICommitRoot } from 'src/app/model/commits';
+import { IPullRequestRoot } from 'src/app/model/pull-request';
+import { IRepoIssueRoot } from 'src/app/model/repo-issues';
 
 @Component({
   selector: 'app-conectivity',
@@ -144,12 +147,14 @@ export class ConectivityComponent implements OnInit {
     if(tok){
       token = JSON.parse(tok)
     }
+
+    this.spinner.show();
     combineLatest([this.conectivityService.getOrganizationReposCommits({ accessToken:token ,orgName:event.owner.login , repoName:event.name }), this.conectivityService.getOrganizationReposPullRequests({ accessToken:token ,orgName:event.owner.login , repoName:event.name }), this.conectivityService.getOrganizationReposIssues({ accessToken:token ,orgName:event.owner.login , repoName:event.name })]).subscribe({
-      next: ([commits, pullRequests, issues]: [any, any, any]) => {
+      next: ([commits, pullRequests, issues]: [ICommitRoot, IPullRequestRoot, IRepoIssueRoot]) => {
         this.repoComments = commits.data.length
         this.repoPullRequest = pullRequests.data.length;
         this.repoIssues = issues.data.length;
-
+        this.spinner.hide();
         this.repoRetails = [
           {
            userId: this.connectedUser?.data.id,
