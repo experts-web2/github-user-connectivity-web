@@ -40,6 +40,7 @@ export class ConectivityComponent implements OnInit {
   repoPullRequest!: number;
   repoIssues!: number;
   repoRetails: RepoRetail[]=[];
+  organization: any;
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -120,6 +121,7 @@ export class ConectivityComponent implements OnInit {
     this.spinner.show();
     this.conectivityService.getOrganizations(payload).subscribe({
       next: (organizations : IOrganization[]) => {
+        this.organization = organizations
         this.getOrganizationsRepo(token)
         this.spinner.hide();
       },
@@ -127,14 +129,27 @@ export class ConectivityComponent implements OnInit {
     });
   }
 
+  onPagination(event:any,pageEvent:boolean=false){
+    console.log(event)
+      let token
+      let accessToken = localStorage.getItem('token');
+      if(accessToken){
+        token = JSON.parse(accessToken)
+      }
+  this.getOrganizationsRepo(token,event.currentPage,event.pageSize)
+
+  }
+
   /**
    * Handles the callback from GitHub OAuth process.
    * @param code The authorization code received from GitHub.
    * @param state The state parameter for CSRF protection.
    */
-  getOrganizationsRepo(token: string): void {
+  getOrganizationsRepo(token: string,page:number=1,perPage:number=10): void {
     let payload = {
       accessToken: token,
+      page:page,
+      pageSize:perPage
     }
     this.spinner.show();
     this.conectivityService.getOrganizationRepos(payload).subscribe({

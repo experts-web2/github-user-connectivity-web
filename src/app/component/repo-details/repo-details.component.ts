@@ -17,4 +17,12 @@ export class RepoDetailsComponent {
     { headerName: "Total Pull Requests", field: 'totalPullRequest', filter: true },
     { headerName: "Total Issues", field: 'totalIssues', filter: true },
   ];
+
+  onPagination(event:any){
+    let token
+    let accessToken = localStorage.getItem('token');
+    if(accessToken){
+      token = JSON.parse(accessToken)
+    }
+}
 }

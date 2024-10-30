@@ -1,17 +1,18 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 
-
 @Component({
   selector: 'app-ag-grid',
   templateUrl: './ag-grid.component.html',
   styleUrls: ['./ag-grid.component.scss']
 })
 export class AgGridComponent implements OnChanges {
-  paginationPageSize = 10;
-  paginationPageSizeSelector = [10, 20, 30,40,50];
   @Input() data!: Array<any>;
   @Input() colDefs!: Array<any>;
+  @Input() pagination: boolean = true;
+  @Input() paginationPageSize: number = 10;
+  previousPage: number = 1;
   @Output() onRowSelection: EventEmitter<any> = new EventEmitter();
+  @Output() pageSelection: EventEmitter<any> = new EventEmitter();
 
   rowData: any[] = [];
   constructor(){
@@ -30,8 +31,7 @@ export class AgGridComponent implements OnChanges {
   }
   
   onSelectionChanged(event:any){
-    
-    const selectedNodes = event.api.getSelectedNodes()[0]?.data; // Gets all selected rows
+    const selectedNodes = event.api.getSelectedNodes()[0]?.data;
     if(selectedNodes){
       this.onRowSelection.emit(selectedNodes);
     }
@@ -39,6 +39,15 @@ export class AgGridComponent implements OnChanges {
       this.onRowSelection.emit(undefined);
     }
   }
+
+  onPaginationChanged(params: any) {
+    const currentPage = params.api.paginationGetCurrentPage() + 1;
+    if (currentPage !== this.previousPage) {
+      this.previousPage = currentPage;
+      const pageSize = this.paginationPageSize;
+      this.pageSelection.emit({ currentPage, pageSize });
+    }
+    }
 
   
 }
