@@ -12,7 +12,7 @@ import { ConectivityComponent } from './component/conectivity/conectivity.compon
 import { AuthModule } from '@auth0/auth0-angular';
 import { HttpClientModule } from '@angular/common/http';
 import { NgxSpinnerModule } from 'ngx-spinner';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { AgGridComponent } from './modules/shared/components/ag-grid/ag-grid.component';
 import { AgGridModule } from 'ag-grid-angular';
 import { FormsModule } from '@angular/forms';
@@ -30,6 +30,7 @@ import { RepoDetailsComponent } from './component/repo-details/repo-details.comp
     AppRoutingModule,
     BrowserAnimationsModule,
     FormsModule,
+    CommonModule,
     SharedModule,
     MatExpansionModule,
     MatIconModule,

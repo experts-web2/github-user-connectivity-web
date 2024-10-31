@@ -9,6 +9,7 @@ import * as crypto from 'crypto-js';
 })
 export class ConectivityService extends HttpService {
   organizationRepos$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
+  organizationReposPagination$: BehaviorSubject<any> = new BehaviorSubject<any>({});
 
   // GitHub OAuth client ID
   private readonly CLIENT_ID = 'Ov23liEfxzi01DRu0sXZ';  

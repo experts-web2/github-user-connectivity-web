@@ -1,14 +1,16 @@
 <div class="ag-theme-quartz">
   <ag-grid-angular
     [pagination]="pagination"
-    [paginationPageSize]="paginationPageSize"
     style="width: 100%; height: 500px;"
     class="ag-theme-alpine"
+    [paginationPageSize]="paginationObj.perPage || 10"
+    [paginationAutoPageSize]="true"
     [rowData]="rowData"
     [columnDefs]="colDefs"
     (selectionChanged)="onSelectionChanged($event)"
     (paginationChanged)="onPaginationChanged($event)"
-    >
+    (gridReady)="onGridReady($event)"
+  >
   </ag-grid-angular>
 </div>
 

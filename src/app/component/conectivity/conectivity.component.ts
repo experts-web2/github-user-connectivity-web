@@ -41,6 +41,7 @@ export class ConectivityComponent implements OnInit {
   repoIssues!: number;
   repoRetails: RepoRetail[]=[];
   organization: any;
+  organizationReposPagination: any;
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -51,12 +52,18 @@ export class ConectivityComponent implements OnInit {
   ) {
     const user = localStorage.getItem('user');
     const repos = localStorage.getItem('repos');
+    const pagination = localStorage.getItem('pagination');
     if (user) {
       this.connectedUser = JSON.parse(user);
     }
     if (repos) {
       this.organizationRepos = JSON.parse(repos);
       this.conectivityService.organizationRepos$.next(this.organizationRepos)
+    }
+
+    if (pagination) {
+      this.organizationReposPagination = JSON.parse(pagination);
+      this.conectivityService.organizationReposPagination$.next(this.organizationReposPagination)
     }
   }
 
@@ -71,6 +78,10 @@ export class ConectivityComponent implements OnInit {
 
     this.conectivityService.organizationRepos$.subscribe(data => {
       this.organizationRepos = data
+    })
+
+    this.conectivityService.organizationReposPagination$.subscribe(data => {
+      this.organizationReposPagination = data
     })
   }
 
@@ -154,8 +165,11 @@ export class ConectivityComponent implements OnInit {
     this.spinner.show();
     this.conectivityService.getOrganizationRepos(payload).subscribe({
       next: (user : IOrganizationRoot) => {
+        this.organizationRepos = user.data
         this.conectivityService.organizationRepos$.next(user.data)
+        this.conectivityService.organizationReposPagination$.next(user.pagination)
         localStorage.setItem('repos', JSON.stringify(user.data))
+        localStorage.setItem('pagination', JSON.stringify(user.pagination))
         this.spinner.hide();
       },
       error: () => this.spinner.hide(),

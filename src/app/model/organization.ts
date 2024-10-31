@@ -1,6 +1,14 @@
 export interface IOrganizationRoot {
   success: boolean
-  data: IOrganizationRepo[]
+  data: IOrganizationRepo[],
+  pagination:IPagination
+}
+
+export interface IPagination {
+  currentPage: number
+  perPage: number
+  totalPages: number
+  totalRepos: number
 }
 
 export interface IOrganizationRepo {
