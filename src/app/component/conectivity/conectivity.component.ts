@@ -19,7 +19,7 @@ import { IRepoIssueRoot } from 'src/app/model/repo-issues';
 export class ConectivityComponent implements OnInit {
   panelOpenState = false;
   connectedUser: IConnectedUser | null = null;
-  organizationRepos: Array<IOrganizationRepo> = []
+  organizationRepos: any
   display: boolean = false;
   colDefs: ColDef<any>[] = [
     { headerName: "Id", field: 'id', filter: true, sortable: true },
@@ -39,7 +39,7 @@ export class ConectivityComponent implements OnInit {
   repoComments!: number;
   repoPullRequest!: number;
   repoIssues!: number;
-  repoRetails: RepoRetail[]=[];
+  repoRetails: any;
   organization: any;
   organizationReposPagination: any;
   constructor(
@@ -164,11 +164,15 @@ export class ConectivityComponent implements OnInit {
     }
     this.spinner.show();
     this.conectivityService.getOrganizationRepos(payload).subscribe({
-      next: (user : IOrganizationRoot) => {
+      next: (user : any) => {
         this.organizationRepos = user.data
-        this.conectivityService.organizationRepos$.next(user.data)
+        let data = {
+          data:user.data,
+          totalRecords : user.totalRecords
+        }
+        this.conectivityService.organizationRepos$.next(data)
         this.conectivityService.organizationReposPagination$.next(user.pagination)
-        localStorage.setItem('repos', JSON.stringify(user.data))
+        localStorage.setItem('repos', JSON.stringify(data))
         localStorage.setItem('pagination', JSON.stringify(user.pagination))
         this.spinner.hide();
       },
@@ -196,15 +200,28 @@ export class ConectivityComponent implements OnInit {
           this.repoPullRequest = pullRequests.data.length;
           this.repoIssues = issues.data.length;
           this.spinner.hide();
-          this.repoRetails = [
-            {
-             userId: this.connectedUser?.data.id,
-             userName: this.connectedUser?.data.name,
-             totalCommits:this.repoComments,
-             totalPullRequest: this.repoPullRequest,
-             totalIssues: this.repoIssues
-             },
-          ];
+          // this.repoRetails = [
+          //   {
+          //    userId: this.connectedUser?.data.id,
+          //    userName: this.connectedUser?.data.name,
+          //    totalCommits:this.repoComments,
+          //    totalPullRequest: this.repoPullRequest,
+          //    totalIssues: this.repoIssues
+          //    },
+          // ];
+
+          this.repoRetails = {
+            data: [{
+              userId: this.connectedUser?.data.id,
+              userName: this.connectedUser?.data.name,
+              totalCommits: this.repoComments,
+              totalPullRequest: this.repoPullRequest,
+              totalIssues: this.repoIssues
+            }
+            ],
+            totalRecords: 1
+          };
+  
   
         },
         error(err) {
@@ -226,8 +243,10 @@ export class ConectivityComponent implements OnInit {
       next: () => {
         localStorage.removeItem('user');
         localStorage.removeItem('repos');
-        this.conectivityService.organizationRepos$.next([])
-        this.repoRetails = [];
+        localStorage.removeItem('pagination');
+        this.conectivityService.organizationRepos$.next({})
+        this.conectivityService.organizationReposPagination$.next({})
+        this.repoRetails = {};
         this.connectedUser = null;
         this.spinner.hide();
       },

@@ -8,7 +8,7 @@ import * as crypto from 'crypto-js';
   providedIn: 'root',
 })
 export class ConectivityService extends HttpService {
-  organizationRepos$: BehaviorSubject<any[]> = new BehaviorSubject<any[]>([]);
+  organizationRepos$: BehaviorSubject<any> = new BehaviorSubject<any>({});
   organizationReposPagination$: BehaviorSubject<any> = new BehaviorSubject<any>({});
 
   // GitHub OAuth client ID

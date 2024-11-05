@@ -18,6 +18,7 @@ import { AgGridModule } from 'ag-grid-angular';
 import { FormsModule } from '@angular/forms';
 import { SharedModule } from './modules/shared/shared/shared.module';
 import { RepoDetailsComponent } from './component/repo-details/repo-details.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @NgModule({
   declarations: [
@@ -37,6 +38,7 @@ import { RepoDetailsComponent } from './component/repo-details/repo-details.comp
     MatCardModule,
     MatButtonModule,
     HttpClientModule,
+    AgGridModule,
     NgxSpinnerModule,
     AuthModule.forRoot({
       domain: 'YOUR_AUTH0_DOMAIN',
@@ -45,6 +47,7 @@ import { RepoDetailsComponent } from './component/repo-details/repo-details.comp
         redirect_uri: window.location.origin
       }
     }),
+    FontAwesomeModule,
   ],
   exports:[NgxSpinnerModule],
   providers: [DatePipe],
