@@ -6,7 +6,7 @@ import { BehaviorSubject, combineLatest } from 'rxjs';
 import { IConnectedUser, IOrganization, RepoRetail } from 'src/app/model/user';
 import { ConectivityService } from 'src/app/services/conectivity.service';
 import { ColDef } from 'ag-grid-community';
-import { IOrganizationRepo, IOrganizationRoot } from 'src/app/model/organization';
+import { IOrganizationDetails, IOrganizationRepo, IOrganizationRoot } from 'src/app/model/organization';
 import { ICommitRoot } from 'src/app/model/commits';
 import { IPullRequestRoot } from 'src/app/model/pull-request';
 import { IRepoIssueRoot } from 'src/app/model/repo-issues';
@@ -19,7 +19,7 @@ import { IRepoIssueRoot } from 'src/app/model/repo-issues';
 export class ConectivityComponent implements OnInit {
   panelOpenState = false;
   connectedUser: IConnectedUser | null = null;
-  organizationRepos: any
+  organizationRepos: IOrganizationRepo[]=[]
   display: boolean = false;
   colDefs: ColDef<any>[] = [
     { headerName: "Id", field: 'id', filter: true, sortable: true },
@@ -39,9 +39,8 @@ export class ConectivityComponent implements OnInit {
   repoComments!: number;
   repoPullRequest!: number;
   repoIssues!: number;
-  repoRetails: any;
-  organization: any;
-  organizationReposPagination: any;
+  repoRetails: IOrganizationDetails[]=[];
+  organization: IOrganization[]=[];
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -52,18 +51,12 @@ export class ConectivityComponent implements OnInit {
   ) {
     const user = localStorage.getItem('user');
     const repos = localStorage.getItem('repos');
-    const pagination = localStorage.getItem('pagination');
     if (user) {
       this.connectedUser = JSON.parse(user);
     }
     if (repos) {
       this.organizationRepos = JSON.parse(repos);
       this.conectivityService.organizationRepos$.next(this.organizationRepos)
-    }
-
-    if (pagination) {
-      this.organizationReposPagination = JSON.parse(pagination);
-      this.conectivityService.organizationReposPagination$.next(this.organizationReposPagination)
     }
   }
 
@@ -78,10 +71,6 @@ export class ConectivityComponent implements OnInit {
 
     this.conectivityService.organizationRepos$.subscribe(data => {
       this.organizationRepos = data
-    })
-
-    this.conectivityService.organizationReposPagination$.subscribe(data => {
-      this.organizationReposPagination = data
     })
   }
 
@@ -140,40 +129,20 @@ export class ConectivityComponent implements OnInit {
     });
   }
 
-  onPagination(event:any,pageEvent:boolean=false){
-    console.log(event)
-      let token
-      let accessToken = localStorage.getItem('token');
-      if(accessToken){
-        token = JSON.parse(accessToken)
-      }
-  this.getOrganizationsRepo(token,event.currentPage,event.pageSize)
-
-  }
-
   /**
    * Handles the callback from GitHub OAuth process.
    * @param code The authorization code received from GitHub.
    * @param state The state parameter for CSRF protection.
    */
-  getOrganizationsRepo(token: string,page:number=1,perPage:number=10): void {
+  getOrganizationsRepo(token: string): void {
     let payload = {
-      accessToken: token,
-      page:page,
-      pageSize:perPage
+      accessToken: token
     }
     this.spinner.show();
     this.conectivityService.getOrganizationRepos(payload).subscribe({
-      next: (user : any) => {
-        this.organizationRepos = user.data
-        let data = {
-          data:user.data,
-          totalRecords : user.totalRecords
-        }
-        this.conectivityService.organizationRepos$.next(data)
-        this.conectivityService.organizationReposPagination$.next(user.pagination)
-        localStorage.setItem('repos', JSON.stringify(data))
-        localStorage.setItem('pagination', JSON.stringify(user.pagination))
+      next: (user : IOrganizationRoot) => {
+        this.conectivityService.organizationRepos$.next(user.data)
+        localStorage.setItem('repos', JSON.stringify(user.data))
         this.spinner.hide();
       },
       error: () => this.spinner.hide(),
@@ -200,29 +169,15 @@ export class ConectivityComponent implements OnInit {
           this.repoPullRequest = pullRequests.data.length;
           this.repoIssues = issues.data.length;
           this.spinner.hide();
-          // this.repoRetails = [
-          //   {
-          //    userId: this.connectedUser?.data.id,
-          //    userName: this.connectedUser?.data.name,
-          //    totalCommits:this.repoComments,
-          //    totalPullRequest: this.repoPullRequest,
-          //    totalIssues: this.repoIssues
-          //    },
-          // ];
-
-          this.repoRetails = {
-            data: [{
-              userId: this.connectedUser?.data.id,
-              userName: this.connectedUser?.data.name,
-              totalCommits: this.repoComments,
-              totalPullRequest: this.repoPullRequest,
-              totalIssues: this.repoIssues
-            }
-            ],
-            totalRecords: 1
-          };
-  
-  
+          this.repoRetails = [
+            {
+             userId: this.connectedUser?.data.id,
+             userName: this.connectedUser?.data.name,
+             totalCommits:this.repoComments,
+             totalPullRequest: this.repoPullRequest,
+             totalIssues: this.repoIssues
+             },
+          ];
         },
         error(err) {
           console.log(err)
@@ -243,10 +198,8 @@ export class ConectivityComponent implements OnInit {
       next: () => {
         localStorage.removeItem('user');
         localStorage.removeItem('repos');
-        localStorage.removeItem('pagination');
         this.conectivityService.organizationRepos$.next({})
-        this.conectivityService.organizationReposPagination$.next({})
-        this.repoRetails = {};
+        this.repoRetails = [];
         this.connectedUser = null;
         this.spinner.hide();
       },

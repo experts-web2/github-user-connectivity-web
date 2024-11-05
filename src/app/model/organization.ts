@@ -1,14 +1,6 @@
 export interface IOrganizationRoot {
   success: boolean
   data: IOrganizationRepo[],
-  pagination:IPagination
-}
-
-export interface IPagination {
-  currentPage: number
-  perPage: number
-  totalPages: number
-  totalRepos: number
 }
 
 export interface IOrganizationRepo {
@@ -151,4 +143,12 @@ export interface SecretScanningNonProviderPatterns {
 
 export interface SecretScanningValidityChecks {
   status: string
+}
+
+export interface IOrganizationDetails {
+  userId: number | any
+  userName: string | any
+  totalCommits: number
+  totalPullRequest: number
+  totalIssues: number
 }

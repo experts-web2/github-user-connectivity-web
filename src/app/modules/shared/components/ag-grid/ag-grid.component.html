@@ -3,42 +3,14 @@
   #myGrid
     style="width: 100%; height: 500px;"
     class="ag-theme-alpine"
-    [gridOptions]="gridOptions"
+    [pagination]="true"
+    [paginationPageSize]="10"
+    [paginationAutoPageSize]="true"
+    [columnDefs]="colDefs"
+    [rowData]="rowData"
     (selectionChanged)="onSelectionChanged($event)"
-    (gridReady)="onGridReady($event)"
   >
   </ag-grid-angular>
-
-  <div *ngIf="paginationObj" class="pagination-controls">
-    <span>Page {{ paginationObj.currentPage }} of {{ paginationObj.totalPages }}</span>
-
-    <button 
-      (click)="goToPage(1)" 
-      [disabled]="paginationObj.currentPage === 1"
-    >
-      First
-    </button>
-    <button 
-      (click)="goToPage(paginationObj.currentPage - 1)" 
-      [disabled]="paginationObj.currentPage === 1"
-    >
-      Previous
-    </button>
-
-    <button 
-      (click)="goToPage(paginationObj.currentPage + 1)" 
-      [disabled]="paginationObj.currentPage === paginationObj.totalPages"
-    >
-      Next
-    </button>
-    <button 
-      (click)="goToPage(paginationObj.totalPages)" 
-      [disabled]="paginationObj.currentPage === paginationObj.totalPages"
-    >
-      Last
-    </button>
-  </div>
-
 </div>
 
 
