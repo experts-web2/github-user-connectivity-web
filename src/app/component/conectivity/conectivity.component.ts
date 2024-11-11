@@ -1,8 +1,8 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { BehaviorSubject, combineLatest } from 'rxjs';
+import { BehaviorSubject, combineLatest, Subject, takeUntil } from 'rxjs';
 import { IConnectedUser, IOrganization, RepoRetail } from 'src/app/model/user';
 import { ConectivityService } from 'src/app/services/conectivity.service';
 import { ColDef } from 'ag-grid-community';
@@ -10,17 +10,22 @@ import { IOrganizationDetails, IOrganizationRepo, IOrganizationRoot } from 'src/
 import { ICommitRoot } from 'src/app/model/commits';
 import { IPullRequestRoot } from 'src/app/model/pull-request';
 import { IRepoIssueRoot } from 'src/app/model/repo-issues';
+import * as crypto from 'crypto-js';
+import { environment } from 'src/environment/environment';
+
 
 @Component({
   selector: 'app-conectivity',
   templateUrl: './conectivity.component.html',
   styleUrls: ['./conectivity.component.scss'],
 })
-export class ConectivityComponent implements OnInit {
+export class ConectivityComponent implements OnInit ,OnDestroy {
   panelOpenState = false;
   connectedUser: IConnectedUser | null = null;
   organizationRepos: IOrganizationRepo[]=[]
   display: boolean = false;
+  private componentDestroyed = new Subject<void>();
+
   colDefs: ColDef<any>[] = [
     { headerName: "Id", field: 'id', filter: true, sortable: true },
     { headerName: "Name",field: 'name', filter: true, sortable: true  },
@@ -47,7 +52,6 @@ export class ConectivityComponent implements OnInit {
     private datePipe: DatePipe,
     private conectivityService: ConectivityService,
     private spinner: NgxSpinnerService,
-    private cdr: ChangeDetectorRef
   ) {
     const user = localStorage.getItem('user');
     const repos = localStorage.getItem('repos');
@@ -61,15 +65,15 @@ export class ConectivityComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(({ code, state }) => {
+    this.route.queryParams.pipe(takeUntil(this.componentDestroyed)).subscribe(({ code, state }) => {
       const storedState = localStorage.getItem('latestCSRFToken');
-      if (state !== storedState) return;
-      localStorage.removeItem('latestCSRFToken');
-      this.getCallback(code, state);
-
+      if (state === storedState) {
+        localStorage.removeItem('latestCSRFToken');
+        this.getCallback(code, state);
+      }
     });
 
-    this.conectivityService.organizationRepos$.subscribe(data => {
+    this.conectivityService.organizationRepos$.pipe(takeUntil(this.componentDestroyed)).subscribe(data => {
       this.organizationRepos = data
     })
   }
@@ -87,7 +91,21 @@ export class ConectivityComponent implements OnInit {
    * Initiates the GitHub login process.
    */
   connect(): void {
-    this.conectivityService.loginWithGitHub();
+    // Generate a random state for CSRF protection
+    const state = crypto.lib.WordArray.random(16).toString();
+    localStorage.setItem('latestCSRFToken', state);
+
+    // Prepare the URL parameters for the GitHub OAuth request
+    const params = new URLSearchParams({
+      client_id: environment.CLIENT_ID,
+      response_type: 'code',
+      scope: 'repo',
+      redirect_uri: `${window.location.origin}/connectivity`,
+      state: state,
+    });
+
+    // Redirect to GitHub's authorization page
+    window.location.href = `${environment.GITHUB_AUTH_URL}?${params.toString()}`;
   }
 
   /**
@@ -97,7 +115,7 @@ export class ConectivityComponent implements OnInit {
    */
   private getCallback(code: string, state: string): void {
     this.spinner.show();
-    this.conectivityService.getCallBack({ code, state }).subscribe({
+    this.conectivityService.getCallBack({ code, state }).pipe(takeUntil(this.componentDestroyed)).subscribe({
       next: (user) => {
         localStorage.setItem('token',JSON.stringify(user.accessToken))
         this.getOrganizations(user.accessToken);
@@ -139,7 +157,7 @@ export class ConectivityComponent implements OnInit {
       accessToken: token
     }
     this.spinner.show();
-    this.conectivityService.getOrganizationRepos(payload).subscribe({
+    this.conectivityService.getOrganizationRepos(payload).pipe(takeUntil(this.componentDestroyed)).subscribe({
       next: (user : IOrganizationRoot) => {
         this.conectivityService.organizationRepos$.next(user.data)
         localStorage.setItem('repos', JSON.stringify(user.data))
@@ -163,7 +181,10 @@ export class ConectivityComponent implements OnInit {
       }
   
       this.spinner.show();
-      combineLatest([this.conectivityService.getOrganizationReposCommits({ accessToken:token ,orgName:event.owner.login , repoName:event.name }), this.conectivityService.getOrganizationReposPullRequests({ accessToken:token ,orgName:event.owner.login , repoName:event.name }), this.conectivityService.getOrganizationReposIssues({ accessToken:token ,orgName:event.owner.login , repoName:event.name })]).subscribe({
+      combineLatest([this.conectivityService.getOrganizationReposCommits({ accessToken: token, orgName: event.owner.login, repoName: event.name }),
+         this.conectivityService.getOrganizationReposPullRequests({ accessToken: token, orgName: event.owner.login, repoName: event.name }),
+         this.conectivityService.getOrganizationReposIssues({ accessToken: token, orgName: event.owner.login, repoName: event.name })]).pipe(takeUntil(this.componentDestroyed))
+        .subscribe({
         next: ([commits, pullRequests, issues]: [ICommitRoot, IPullRequestRoot, IRepoIssueRoot]) => {
           this.repoComments = commits.data.length
           this.repoPullRequest = pullRequests.data.length;
@@ -171,12 +192,12 @@ export class ConectivityComponent implements OnInit {
           this.spinner.hide();
           this.repoRetails = [
             {
-             userId: this.connectedUser?.data.id,
-             userName: this.connectedUser?.data.name,
-             totalCommits:this.repoComments,
-             totalPullRequest: this.repoPullRequest,
-             totalIssues: this.repoIssues
-             },
+              userId: this.connectedUser?.data.id,
+              userName: this.connectedUser?.data.name,
+              totalCommits:this.repoComments,
+              totalPullRequest: this.repoPullRequest,
+              totalIssues: this.repoIssues
+            },
           ];
         },
         error(err) {
@@ -194,10 +215,11 @@ export class ConectivityComponent implements OnInit {
    */
   disconectUser(userToken: string): void {
     this.spinner.show();
-    this.conectivityService.disconnectUser(userToken).subscribe({
+    this.conectivityService.disconnectUser(userToken).pipe(takeUntil(this.componentDestroyed)).subscribe({
       next: () => {
         localStorage.removeItem('user');
         localStorage.removeItem('repos');
+        localStorage.removeItem('token');
         this.conectivityService.organizationRepos$.next({})
         this.repoRetails = [];
         this.connectedUser = null;
@@ -205,5 +227,11 @@ export class ConectivityComponent implements OnInit {
       },
       error: () => this.spinner.hide(),
     });
+  }
+
+  // Completes the subject and ensures all subscriptions are terminated.
+  ngOnDestroy(): void {
+    this.componentDestroyed.next();
+    this.componentDestroyed.complete();
   }
 }

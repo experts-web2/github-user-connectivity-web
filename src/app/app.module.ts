@@ -13,7 +13,6 @@ import { AuthModule } from '@auth0/auth0-angular';
 import { HttpClientModule } from '@angular/common/http';
 import { NgxSpinnerModule } from 'ngx-spinner';
 import { CommonModule, DatePipe } from '@angular/common';
-import { AgGridComponent } from './modules/shared/components/ag-grid/ag-grid.component';
 import { AgGridModule } from 'ag-grid-angular';
 import { FormsModule } from '@angular/forms';
 import { SharedModule } from './modules/shared/shared/shared.module';

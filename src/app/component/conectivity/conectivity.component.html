@@ -28,10 +28,10 @@
           <app-ag-grid *ngIf="organizationRepos?.length" [data]="organizationRepos" [colDefs]="colDefs" (onRowSelection)="onActionClick($event)">
           </app-ag-grid>
         </div>
-
+        <!-- display repoDetails component only if repoRetails has data -->
         <app-repo-details *ngIf="repoRetails?.length" [data]="repoRetails" ></app-repo-details>
 
-        
+      
       </mat-expansion-panel>
 
     </mat-accordion>
