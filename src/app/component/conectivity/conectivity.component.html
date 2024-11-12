@@ -25,7 +25,7 @@
           </button>
         </div>
         <div style="margin-top: 10px;">
-          <app-ag-grid *ngIf="organizationRepos?.length" [data]="organizationRepos" [colDefs]="colDefs" (onRowSelection)="onActionClick($event)">
+          <app-ag-grid *ngIf="organizationRepos?.length" [totalRecords]="totalRecords" [data]="organizationRepos" [colDefs]="colDefs" (onRowSelection)="onActionClick($event)" (onPageChangeEvent)="onPageChange($event)">
           </app-ag-grid>
         </div>
         <!-- display repoDetails component only if repoRetails has data -->

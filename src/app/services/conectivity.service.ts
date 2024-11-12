@@ -9,6 +9,7 @@ import * as crypto from 'crypto-js';
 })
 export class ConectivityService extends HttpService {
   organizationRepos$: BehaviorSubject<any> = new BehaviorSubject<any>({});
+  totalRecords$: BehaviorSubject<any> = new BehaviorSubject<any>(0);
   constructor(http: HttpClient) {
     super(http);
   }

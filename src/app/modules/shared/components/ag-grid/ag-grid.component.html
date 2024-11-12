@@ -1,15 +1,19 @@
 <div class="ag-theme-quartz">
   <ag-grid-angular
-  #myGrid
-    style="width: 100%; height: 500px;"
+    #myGrid
+    style="width: 100%; height: 500px"
     class="ag-theme-alpine"
-    [pagination]="true"
+    [pagination]="false"
     [paginationPageSize]="10"
     [columnDefs]="colDefs"
     [rowData]="rowData"
     (selectionChanged)="onSelectionChanged($event)"
   >
   </ag-grid-angular>
+  <mat-paginator
+    [length]="totalRecords"
+    [pageSize]="10"
+    (page)="onPageChange($event)"
+  >
+  </mat-paginator>
 </div>
-
-

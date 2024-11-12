@@ -1,6 +1,7 @@
 export interface IOrganizationRoot {
   success: boolean
   data: IOrganizationRepo[],
+  total: number
 }
 
 export interface IOrganizationRepo {
